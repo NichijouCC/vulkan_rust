@@ -60,7 +60,7 @@ impl<B> HalState<B>
 where
     B: Backend,
 {
-    pub fn new(window: &Window) -> Self {
+    pub fn new(window: &Window) -> Result<Self,&str> {
         let instance = B::Instance::create("halstateWindow", 1).unwrap();
 
         let mut surface = unsafe { instance.create_surface(window).unwrap() };
@@ -131,11 +131,13 @@ where
                 resolves: &[],
                 preserves: &[],
             };
-            unsafe {
-                device
-                    .create_render_pass(&[color_attachment], &[subpass], &[])
-                    .map_err(|_| "Couldn't create a render pass!")?
-            }
+            ManuallyDrop::new(
+                unsafe {
+                    device
+                        .create_render_pass(&[color_attachment], &[subpass], &[])
+                        .map_err(|_| "Couldn't create a render pass!")?
+                }
+            )
         };
 
         let frames_in_flight = 3;
@@ -178,7 +180,7 @@ where
             depth: 0.0..1.0,
         };
 
-        HalState {
+        Ok(HalState {
             frame: 0,
             frames_in_flight,
             adapter,
@@ -194,7 +196,7 @@ where
             cmd_buffers,
             cmd_pools,
         }
-
+) 
         // let image_views:Vec<_>= match backbu
         // let set_layout=ManuallyDrop::new(
         //     unsafe{
