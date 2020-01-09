@@ -61,7 +61,7 @@ where
     B: Backend,
 {
     pub fn new(window: &Window) -> Result<Self,&str> {
-        let instance = B::Instance::create("halstateWindow", 1).unwrap();
+        let instance = back::Instance::create("halstateWindow", 1).unwrap();
 
         let mut surface = unsafe { instance.create_surface(window).unwrap() };
 
@@ -212,7 +212,7 @@ where
         // )
     }
 
-    fn render(&mut self) {
+    pub fn render(&mut self) {
         let surface_image = unsafe {
             match self.surface.acquire_image(!0) {
                 Ok((image, _)) => image,
