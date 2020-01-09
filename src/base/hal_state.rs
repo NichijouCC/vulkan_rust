@@ -1,22 +1,20 @@
 // #[cfg(feature = "dex12")]
-use gfx_backend_vulkan as back;
 // #[cfg(feature = "metal")]
 // use gfx_backend_metal as back;
 // #[cfg(feature = "vulkan")]
-// use gfx_backend_vulkan as back;
 
 use gfx_hal::{
     adapter::{Adapter, PhysicalDevice},
     command::{ClearColor, ClearValue, CommandBuffer, CommandBufferFlags, Level, SubpassContents},
     device::Device,
-    format::{Aspects, ChannelType, Format, Swizzle},
-    image::{Extent, Layout, SubresourceRange, Usage, ViewKind},
+    format::{ChannelType, Format},
+    image::{Extent, Layout},
     pass::{Attachment, AttachmentLoadOp, AttachmentOps, AttachmentStoreOp, SubpassDesc},
     pool::{CommandPool, CommandPoolCreateFlags},
     pso,
-    pso::{PipelineStage, Rect, Viewport},
+    pso::Viewport,
     queue::{family::QueueFamily, family::QueueGroup, CommandQueue, Submission},
-    window::{Extent2D, PresentMode, PresentationSurface, Surface, Swapchain, SwapchainConfig},
+    window::{Extent2D, PresentationSurface, Surface, SwapchainConfig},
     Backend, Features, Instance,
 };
 
@@ -25,7 +23,7 @@ use winit::Window;
 use std::{
     borrow::Borrow,
     iter,
-    mem::{self, ManuallyDrop},
+    mem::{ManuallyDrop},
 };
 
 const DIMS: Extent2D = Extent2D {
@@ -60,12 +58,10 @@ impl<B> HalState<B>
 where
     B: Backend,
 {
-    pub fn new(window: &Window) -> Result<Self,&str> {
-        let instance = back::Instance::create("halstateWindow", 1).unwrap();
-
+    pub fn new(instance: B::Instance, window: &Window) -> Result<Self, &'static str> {
         let mut surface = unsafe { instance.create_surface(window).unwrap() };
 
-        let adapter: Adapter<B> = instance
+        let adapter = instance
             .enumerate_adapters()
             .into_iter()
             .find(|a| {
@@ -91,7 +87,7 @@ where
         let queue_group = gpu.queue_groups.pop().unwrap();
         let device = gpu.device;
 
-        let mut command_pool = unsafe {
+        let command_pool = unsafe {
             device.create_command_pool(queue_group.family, CommandPoolCreateFlags::empty())
         }
         .expect("can't create command pool");
@@ -131,13 +127,11 @@ where
                 resolves: &[],
                 preserves: &[],
             };
-            ManuallyDrop::new(
-                unsafe {
-                    device
-                        .create_render_pass(&[color_attachment], &[subpass], &[])
-                        .map_err(|_| "Couldn't create a render pass!")?
-                }
-            )
+            ManuallyDrop::new(unsafe {
+                device
+                    .create_render_pass(&[color_attachment], &[subpass], &[])
+                    .map_err(|_| "Couldn't create a render pass!")?
+            })
         };
 
         let frames_in_flight = 3;
@@ -195,8 +189,7 @@ where
             submission_complete_fences,
             cmd_buffers,
             cmd_pools,
-        }
-) 
+        })
         // let image_views:Vec<_>= match backbu
         // let set_layout=ManuallyDrop::new(
         //     unsafe{
@@ -258,7 +251,7 @@ where
                 self.viewport.rect,
                 &[ClearValue {
                     color: ClearColor {
-                        float32: [0.8, 0.8, 0.8, 1.0],
+                        float32: [0.3, 0.3, 0.3, 1.0],
                     },
                 }],
                 SubpassContents::Inline,
